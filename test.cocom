@@ -1,0 +1,52 @@
+// This is a single-line comment
+var x = 10; // Declare and initialize x
+var y = 5;  // Declare and initialize y
+
+print("--- Test 1: If-else statement ---");
+if (x > y) {
+    print("x is greater than y"); // Expected: x is greater than y
+} else if (x == y) {
+    print("x is equal to y");
+} else {
+    print("x is less than y");
+}
+
+print("--- Test 2: Arithmetic Operations ---");
+var a = 20;
+var b = 4;
+print(a + b); // Expected: 24
+print(a - b); // Expected: 16
+print(a * b); // Expected: 80
+print(a / b); // Expected: 5
+
+print("--- Test 3: Logical Operations ---");
+var p = true;
+var q = false;
+print(p && q); // Expected: false
+print(p || q); // Expected: true
+print(!p);     // Expected: false
+print(!q);     // Expected: true
+
+print("--- Test 4: String Concatenation ---");
+var str1 = "Hello, ";
+var str2 = "World!";
+print(str1 + str2); // Expected: Hello, World!
+
+print("--- Test 5: Chained Comparisons ---");
+var num1 = 10;
+var num2 = 10;
+var num3 = 5;
+if (num1 >= num2) {
+    print("num1 is greater than or equal to num2"); // Expected: num1 is greater than or equal to num2
+}
+if (num1 != num3) {
+    print("num1 is not equal to num3"); // Expected: num1 is not equal to num3
+}
+if (num3 <= num1) {
+    print("num3 is less than or equal to num1"); // Expected: num3 is less than or equal to num1
+}
+
+print("--- Test 6: Assignment as Expression ---");
+var x_assign = 5;
+var y_assign = 7;
+print(x_assign = y_assign); // Expected: 7 (value of y_assign after assignment)
