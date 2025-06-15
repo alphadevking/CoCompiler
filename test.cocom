@@ -50,3 +50,9 @@ print("--- Test 6: Assignment as Expression ---");
 var x_assign = 5;
 var y_assign = 7;
 print(x_assign = y_assign); // Expected: 7 (value of y_assign after assignment)
+
+print("--- Test 7: Complex Assignment Expression ---");
+var x_complex = 2;
+var y_complex = 1;
+x_complex = y_complex + x_complex * 2;
+print(x_complex); // Expected: x_complex will be 5 (1 + 2 * 2)
