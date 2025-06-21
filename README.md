@@ -32,7 +32,7 @@ Follow these steps to create the build directory and compile the project:
 
 1.  **Navigate to the project root directory:**
     ```bash
-    cd c:/Users/Alphadevking/Documents/Codmata/School Project/CoCompiler
+    cd CoCompiler
     ```
 
 2.  **Create a build directory:**
