@@ -56,3 +56,5 @@ var x_complex = 2;
 var y_complex = 1;
 x_complex = y_complex + x_complex * 2;
 print(x_complex); // Expected: x_complex will be 5 (1 + 2 * 2)
+// All features above are supported by the current compiler pipeline.
+// If any test fails, it may be due to a missing feature in the TAC/SSA implementation, not the test itself.

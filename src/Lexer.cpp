@@ -142,6 +142,8 @@ std::vector<Token> Lexer::tokenize() {
             // Check for keywords
             if (value == "var") {
                 tokens.push_back(Token(TokenType::VAR, value, current_line, identifier_start_col));
+            } else if (value == "let") {
+                tokens.push_back(Token(TokenType::LET, value, current_line, identifier_start_col));
             } else if (value == "if") {
                 tokens.push_back(Token(TokenType::IF, value, current_line, identifier_start_col));
             } else if (value == "else") {
@@ -169,6 +171,12 @@ std::vector<Token> Lexer::tokenize() {
                     // It's a single-line comment, consume until newline or EOF
                     while (peek() != '\n' && !isAtEnd()) {
                         advance();
+                    }
+                    // Advance through the newline to preserve line numbers
+                    if (peek() == '\n') {
+                        advance();
+                        current_line++;
+                        current_column = 1;
                     }
                     // Do not add a token for the comment
                 } else {
@@ -245,6 +253,15 @@ std::vector<Token> Lexer::tokenize() {
 
     // Add EOF token at the end
     tokens.push_back(Token(TokenType::EOF_TOKEN, "", current_line, current_column));
+
+    // DEBUG: Print all tokens and their line/column numbers
+    /*
+    std::cout << "\n--- Token Stream ---" << std::endl;
+    for (const auto& token : tokens) {
+        std::cout << "Token: " << token.value << " (" << static_cast<int>(token.type) << ") at L" << token.line << ":C" << token.column << std::endl;
+    }
+    std::cout << "--------------------" << std::endl;
+    */
 
     if (!errors.empty()) {
         std::cerr << "\n--- Lexer Errors ---" << std::endl;

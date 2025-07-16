@@ -37,7 +37,8 @@ enum class Instruction {
     PUSH_STRING = 23,    // Push a string literal index onto the stack
     CONCAT_STRING = 24,   // Pop two string indices, concatenate strings, push new string index
     PRINT_VALUE = 25,     // Pop value from stack and print it (number or boolean)
-    PRINT_STRING = 26     // Pop string index from stack and print the string literal
+    PRINT_STRING = 26,    // Pop string index from stack and print the string literal
+    PRINT_BOOL = 27       // Pop value from stack and print as true/false
 };
 
 /**
@@ -74,6 +75,7 @@ inline std::string instruction_to_string(Instruction instr) {
         case Instruction::CONCAT_STRING: return "CONCAT_STRING";
         case Instruction::PRINT_VALUE: return "PRINT_VALUE";
         case Instruction::PRINT_STRING: return "PRINT_STRING";
+        case Instruction::PRINT_BOOL: return "PRINT_BOOL";
         default: return "UNKNOWN";
     }
 }

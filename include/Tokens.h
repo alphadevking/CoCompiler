@@ -38,6 +38,7 @@ enum class TokenType {
 
     // Keywords
     VAR,        // var keyword for variable declaration
+    LET,        // let keyword for variable declaration
     PRINT,      // print keyword for output
 
     // Identifiers
@@ -95,6 +96,7 @@ struct Token {
             case TokenType::LPAREN:       type_str = "LPAREN"; break;
             case TokenType::RPAREN:       type_str = "RPAREN"; break;
             case TokenType::VAR:          type_str = "VAR"; break;
+            case TokenType::LET:          type_str = "LET"; break;
             case TokenType::PRINT:        type_str = "PRINT"; break;
             case TokenType::IDENTIFIER:   type_str = "IDENTIFIER"; break;
             case TokenType::ASSIGN:       type_str = "ASSIGN"; break;

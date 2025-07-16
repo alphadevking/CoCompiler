@@ -22,21 +22,21 @@ double VM::run(const std::vector<Bytecode>& bytecode, const std::vector<std::str
 
     while (pc < this->bytecode.size()) {
         Bytecode instruction = this->bytecode[pc]; // Peek at instruction
-        std::cout << "DEBUG: PC: " << pc << ", Instruction: " << static_cast<int>(instruction.instruction)
-                  << " (" << instruction_to_string(instruction.instruction) << ")";
+        // std::cout << "DEBUG: PC: " << pc << ", Instruction: " << static_cast<int>(instruction.instruction)
+        //           << " (" << instruction_to_string(instruction.instruction) << ")";
         if (instruction.instruction == Instruction::PUSH_INT ||
             instruction.instruction == Instruction::PUSH_FLOAT ||
             instruction.instruction == Instruction::PUSH_STRING ||
             instruction.instruction == Instruction::JUMP ||
             instruction.instruction == Instruction::JUMP_IF_FALSE ||
             instruction.instruction == Instruction::JUMP_IF_TRUE) {
-            std::cout << " Operand: " << instruction.operand;
+            // std::cout << " Operand: " << instruction.operand;
         }
-        std::cout << " Stack: [";
-        for (size_t i = 0; i < stack.size(); ++i) {
-            std::cout << stack[i] << (i == stack.size() - 1 ? "" : ", ");
-        }
-        std::cout << "]" << std::endl;
+        // std::cout << " Stack: [";
+        // for (size_t i = 0; i < stack.size(); ++i) {
+        //     std::cout << stack[i] << (i == stack.size() - 1 ? "" : ", ");
+        // }
+        // std::cout << "]" << std::endl;
 
         pc++; // Then increment pc
 
@@ -224,12 +224,21 @@ double VM::run(const std::vector<Bytecode>& bytecode, const std::vector<std::str
             case Instruction::PRINT_VALUE: { // New PRINT_VALUE instruction (25)
                 if (stack.empty()) { std::cerr << "VM Error: Stack underflow for PRINT_VALUE." << std::endl; return -1; }
                 double val = stack.back(); stack.pop_back();
-                if (val == 0.0) {
-                    std::cout << "false" << std::endl;
-                } else if (val == 1.0) {
-                    std::cout << "true" << std::endl;
+                // Print as integer if it's an integer, otherwise as double
+                if (std::floor(val) == val) {
+                    std::cout << static_cast<int>(val) << std::endl;
                 } else {
                     std::cout << val << std::endl;
+                }
+                break;
+            }
+            case Instruction::PRINT_BOOL: { // New PRINT_BOOL instruction
+                if (stack.empty()) { std::cerr << "VM Error: Stack underflow for PRINT_BOOL." << std::endl; return -1; }
+                double val = stack.back(); stack.pop_back();
+                if (val == 0.0) {
+                    std::cout << "false" << std::endl;
+                } else {
+                    std::cout << "true" << std::endl;
                 }
                 break;
             }

@@ -224,8 +224,14 @@ Expression* Parser::expression() {
  * @return A pointer to a VariableDeclaration node, or nullptr if an error occurs.
  */
 ASTNode* Parser::parseVariableDeclaration() {
-    consume(TokenType::VAR, "Expected 'var' keyword"); // Consume 'var'
-    Token identifier = consume(TokenType::IDENTIFIER, "Expected identifier after 'var'");
+    // Handles both 'var' and 'let' keywords
+    if (peek().type == TokenType::VAR || peek().type == TokenType::LET) {
+        advance(); // Consume 'var' or 'let'
+    } else {
+        std::cerr << "Parser Error: Expected 'var' or 'let' keyword at L" << peek().line << ":C" << peek().column << std::endl;
+        return nullptr;
+    }
+    Token identifier = consume(TokenType::IDENTIFIER, "Expected identifier after 'var' or 'let'");
     if (identifier.type == TokenType::EOF_TOKEN) return nullptr; // Error occurred
 
     Expression* initializer = nullptr;
@@ -234,8 +240,25 @@ ASTNode* Parser::parseVariableDeclaration() {
         if (!initializer) return nullptr; // Propagate error
     }
 
+    // Track the last token in the statement for better error reporting
+    Token last_token = identifier;
+    if (initializer) {
+        // Try to get the last token of the initializer expression
+        // For simplicity, use the token from the initializer if it's a literal or identifier
+        if (auto* lit = dynamic_cast<Literal*>(initializer)) {
+            last_token = lit->getToken();
+        } else if (auto* ident_expr = dynamic_cast<IdentifierExpression*>(initializer)) {
+            last_token = ident_expr->getIdentifier();
+        }
+        // For more complex expressions, you could add more logic here
+    }
+
     // Consume the semicolon after a variable declaration
-    consume(TokenType::SEMICOLON, "Expected ';' after variable declaration");
+    if (!match(TokenType::SEMICOLON)) {
+        std::cerr << "Parser Error: Expected ';' after variable declaration at L"
+                  << last_token.line << ":C" << (last_token.column + static_cast<int>(last_token.value.length())) << std::endl;
+        return nullptr;
+    }
 
     return new VariableDeclaration(identifier, initializer);
 }
@@ -310,7 +333,7 @@ ASTNode* Parser::parsePrintStatement() {
  * @return A pointer to an ASTNode (VariableDeclaration or Expression), or nullptr if an error occurs.
  */
 ASTNode* Parser::parseStatement() {
-    if (peek().type == TokenType::VAR) {
+    if (peek().type == TokenType::VAR || peek().type == TokenType::LET) {
         return parseVariableDeclaration();
     } else if (peek().type == TokenType::IF) { // New: Handle if statements
         return parseIfStatement();
@@ -320,7 +343,21 @@ ASTNode* Parser::parseStatement() {
     // If none of the above, it must be an expression statement
     Expression* exprStmt = expression();
     if (!exprStmt) return nullptr; // Error occurred
-    consume(TokenType::SEMICOLON, "Expected ';' after expression statement");
+    // Track the last token in the expression for better error reporting
+    Token last_token = tokens[current_pos > 0 ? current_pos - 1 : 0]; // Use last consumed token as fallback
+    if (auto* lit = dynamic_cast<Literal*>(exprStmt)) {
+        last_token = lit->getToken();
+    } else if (auto* ident_expr = dynamic_cast<IdentifierExpression*>(exprStmt)) {
+        last_token = ident_expr->getIdentifier();
+    }
+    if (!match(TokenType::SEMICOLON)) {
+        // Always use the last token in the statement for error location
+        int error_line = last_token.line;
+        int error_col = last_token.column + static_cast<int>(last_token.value.length());
+        std::cerr << "Parser Error: Expected ';' after expression statement at L"
+                  << error_line << ":C" << error_col << std::endl;
+        return nullptr;
+    }
     return exprStmt;
 }
 
@@ -332,6 +369,21 @@ ASTNode* Parser::parseStatement() {
  * @brief Parses the entire token stream into an AST, handling multiple statements.
  * @return A pointer to the root ASTNode (a BlockStatement if multiple, or a single statement), or nullptr if an error occurs.
  */
+void Parser::synchronize() {
+    // Skip tokens until we find a likely statement boundary
+    while (peek().type != TokenType::EOF_TOKEN) {
+        if (peek().type == TokenType::SEMICOLON) {
+            advance();
+            break;
+        }
+        if (peek().type == TokenType::VAR || peek().type == TokenType::LET ||
+            peek().type == TokenType::IF || peek().type == TokenType::PRINT) {
+            break;
+        }
+        advance();
+    }
+}
+
 ASTNode* Parser::parse() {
     std::vector<ASTNode*> statements;
     while (peek().type != TokenType::EOF_TOKEN) {
@@ -339,9 +391,9 @@ ASTNode* Parser::parse() {
         if (statement) {
             statements.push_back(statement);
         } else {
-            // Error occurred in parsing a statement, attempt to recover or stop
-            // For now, we'll stop parsing on the first error in the top-level.
-            return nullptr;
+            // Error occurred in parsing a statement, attempt to recover and continue
+            synchronize();
+            continue;
         }
     }
 

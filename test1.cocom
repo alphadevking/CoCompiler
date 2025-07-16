@@ -1,0 +1,72 @@
+print("=== DEMO: Compiler Phases and Use Cases ===");
+
+// === Use Case 1: Variable Declaration and Assignment ===
+print("--- Use Case 1: Variable Declaration and Assignment ---");
+let x = 5;
+let y = x + 2;
+print("Should print 7:");
+print(y); // Should print 7
+
+// === Use Case 2: Control Flow (If-Else) ===
+print("--- Use Case 2: Control Flow (If-Else) ---");
+let a = 10;
+if (a > 5) {
+  print("Should print 1:");
+  print(1); // Should print 1
+} else {
+  print(0);
+}
+
+// === Use Case 3: Constant Folding (Optimization) ===
+print("--- Use Case 3: Constant Folding (Optimization) ---");
+let z = 2 + 3 * 4;
+print("Should print 14 (constant folded):");
+print(z); // Should print 14 (constant folded)
+
+// === Use Case 4: Multi-line Input (for interactive mode) ===
+print("--- Use Case 4: Multi-line Input (for interactive mode) ---");
+print("Enter the following in interactive mode using :begin and :end");
+// :begin
+let m = 3;
+let n = m * 2;
+print("Should print 6:");
+print(n);
+// :end
+
+// === Use Case 5: Multi-file Compilation ===
+print("--- Use Case 5: Multi-file Compilation ---");
+print("(No code needed here; run the compiler with multiple files to see the effect)");
+
+// === Use Case 6: Full Compiler Phase Walkthrough ===
+print("--- Use Case 6: Full Compiler Phase Walkthrough ---");
+print("PHASE 1: Preprocessing - Removes comments and prepares code for analysis.");
+// This is a comment. It will be removed by preprocessing.
+var x2 = 42; // Variable declaration
+print("Preprocessing done. The code is now ready for tokenization.");
+
+print("PHASE 2: Lexical Analysis - Breaks code into tokens (words and symbols).");
+print("The lexer will see: var, x2, =, 42, ;");
+
+print("PHASE 3: Syntax Analysis - Builds an Abstract Syntax Tree (AST) from tokens.");
+print("The parser will create a tree structure representing: var x2 = 42;");
+
+print("PHASE 4: Semantic Analysis - Checks for errors and meaning.");
+print("The compiler checks if 'x2' is declared, if types match, etc.");
+
+print("PHASE 5: Intermediate Code Generation - Converts AST to bytecode.");
+print("The compiler generates instructions for the virtual machine.");
+
+print("PHASE 6: Code Optimization - Improves the code (e.g., constant folding).");
+print("If possible, the compiler will simplify expressions like 2 + 3 to 5.");
+
+print("PHASE 7: Code Generation - Prepares code for execution.");
+print("The bytecode is now ready to be run by the VM.");
+
+print("PHASE 8: Execution - Runs the program and prints results.");
+print("Let's print the value of x2:");
+print(x2);
+
+// === Use Case 7: Error Handling (at End) ===
+print("--- Use Case 7: Error Handling (at End) ---");
+// let demo = 1;
+// let demo = 2; // Duplicate variable, should trigger semantic error at the end

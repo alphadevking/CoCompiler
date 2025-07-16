@@ -84,6 +84,30 @@ You can run the `cocompiler` executable with a `.cocom` source file as an argume
     (On Linux/macOS: `./build/cocompiler`)
     Type `exit` to quit the interactive mode.
 
+## Educational Outputs
+
+When you run the compiler, it prints the results of each major compiler phase to the console. This is designed to help you learn how a compiler works, step by step. The outputs include:
+
+- **AST (Abstract Syntax Tree):**
+  - Shows the tree structure of your program after parsing.
+  - Each node represents a construct (e.g., variable, expression, statement).
+
+- **Three-Address Code (TAC):**
+  - A simple, linear intermediate representation.
+  - Each instruction has at most three operands (e.g., `t1 = a + b`).
+  - Shows how your code is broken down into basic operations.
+
+- **Control Flow Graph (CFG):**
+  - Visualizes the flow of control through your program.
+  - Each block contains a sequence of TAC instructions and lists outgoing edges (possible next blocks).
+  - Useful for understanding how branches and jumps work.
+
+- **SSA (Static Single Assignment) Form:**
+  - Shows the TAC after variables are renamed so each assignment is unique (e.g., `x1`, `x2`, ...).
+  - Makes data flow and optimization easier to understand.
+
+You will see these outputs printed in order, for every program you run. If you want to focus on a specific phase, simply look for its section in the console output.
+
 ## Project Structure
 
 *   `main.cpp`: Entry point of the compiler, orchestrates the compilation phases.
@@ -102,3 +126,90 @@ You can run the `cocompiler` executable with a `.cocom` source file as an argume
 ## Contributing
 
 Feel free to fork the repository and contribute!
+
+# Use Cases
+
+This section demonstrates multiple use cases for the CoCompiler, showing how each compiler phase works and what you can learn from the outputs. Each use case is accompanied by a sample program (see `test1.cocom`) and an explanation of what to expect.
+
+## 1. Variable Declaration and Assignment
+
+**Code Example:**
+```cocom
+let x = 5;
+let y = x + 2;
+print(y);
+```
+**What to Observe:**
+- **Lexical Analysis:** Tokens for `let`, identifiers, numbers, operators, etc.
+- **Syntax Analysis:** AST nodes for variable declarations and expressions.
+- **Semantic Analysis:** Checks for undeclared/duplicate variables.
+- **IR Generation:** TAC/SSA for assignments and print.
+- **Execution:** Output should be `7`.
+
+## 2. Control Flow (If-Else)
+
+**Code Example:**
+```cocom
+let a = 10;
+if (a > 5) {
+  print(1);
+} else {
+  print(0);
+}
+```
+**What to Observe:**
+- **Syntax Analysis:** AST for if-else.
+- **Semantic Analysis:** Type checks for condition.
+- **IR Generation:** TAC/CFG/SSA with branches.
+- **Execution:** Output should be `1`.
+
+## 3. Constant Folding (Optimization)
+
+**Code Example:**
+```cocom
+let z = 2 + 3 * 4;
+print(z);
+```
+**What to Observe:**
+- **Optimization:** Expression is folded to `14` at compile time.
+- **Execution:** Output should be `14`.
+
+## 4. Multi-line and Interactive Input
+
+**Scenario:**
+- Use `:begin` and `:end` in interactive mode to enter multi-line code.
+- Use `clear` to reset, `help` for commands.
+
+**What to Observe:**
+- The compiler accepts and processes multi-line input as a single program.
+
+## 5. Multi-file Compilation
+
+**Scenario:**
+- Run the compiler with multiple `.cocom` files (e.g., `test1.cocom test2.cocom`).
+
+**What to Observe:**
+- Each file is compiled and executed in sequence. Variables/functions are not shared between files.
+
+## 6. Full Compiler Phase Walkthrough
+
+**Code Example:**
+```cocom
+var x2 = 42;
+print(x2);
+```
+- This section in `test1.cocom` prints explanations for each compiler phase as it runs, helping users understand the process.
+
+## 7. Error Handling (at End)
+
+**Code Example:**
+```cocom
+let demo = 1;
+let demo = 2; // Duplicate variable, should trigger semantic error at the end
+```
+**What to Observe:**
+- All phases are shown, but semantic errors are reported at the end and code is not executed if errors are present.
+
+---
+
+See `test1.cocom` for runnable code examples for the above use cases.

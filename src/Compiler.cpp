@@ -23,6 +23,7 @@ Compiler::Compiler() : symbolTable() {
  */
 std::vector<Bytecode> Compiler::compile(ASTNode* ast) {
     bytecode.clear();
+    clearSemanticErrors();
 
     // Enter the global scope for compilation
     symbolTable.enterScope();
@@ -35,8 +36,17 @@ std::vector<Bytecode> Compiler::compile(ASTNode* ast) {
     if (ast == nullptr || bytecode.empty()) {
         return {}; // Return empty vector if compilation failed or no bytecode was generated
     }
-
     bytecode.push_back(Bytecode(Instruction::HALT));
+
+    // After all phases, report semantic errors and prevent execution if any
+    if (!semanticErrors.empty()) {
+        std::cerr << "--- Semantic Errors ---" << std::endl;
+        for (const auto& err : semanticErrors) {
+            std::cerr << err << std::endl;
+        }
+        std::cerr << "-----------------------" << std::endl;
+        return {}; // Do NOT emit code if there are semantic errors
+    }
     return bytecode;
 }
 
@@ -106,9 +116,7 @@ void Compiler::compileNode(ASTNode* node) {
         Token identifier_token = identExpr->getIdentifier();
         Symbol* symbol = symbolTable.lookupSymbol(identifier_token.value);
         if (!symbol) {
-            std::cerr << "Compiler Error: Undeclared variable '" << identifier_token.value
-                      << "' at L" << identifier_token.line << ":C" << identifier_token.column << std::endl;
-            bytecode.clear(); // Indicate compilation failure
+            semanticErrors.push_back("Semantic Error: Undeclared variable '" + identifier_token.value + "' at L" + std::to_string(identifier_token.line) + ":C" + std::to_string(identifier_token.column));
             return;
         }
         // Push the address of the variable onto the stack, then load its value
@@ -120,9 +128,7 @@ void Compiler::compileNode(ASTNode* node) {
         Token identifier_token = assignExpr->getIdentifier();
         Symbol* symbol = symbolTable.lookupSymbol(identifier_token.value);
         if (!symbol) {
-            std::cerr << "Compiler Error: Assignment to undeclared variable '" << identifier_token.value
-                      << "' at L" << identifier_token.line << ":C" << identifier_token.column << std::endl;
-            bytecode.clear(); // Indicate compilation failure
+            semanticErrors.push_back("Semantic Error: Assignment to undeclared variable '" + identifier_token.value + "' at L" + std::to_string(identifier_token.line) + ":C" + std::to_string(identifier_token.column));
             return;
         }
 
@@ -134,15 +140,15 @@ void Compiler::compileNode(ASTNode* node) {
         // Resolve the actual type of the right-hand side expression
         ASTNode::Type assignedType = resolveExpressionType(assignExpr->getValue());
         if (symbol->type != ASTNode::Type::UNKNOWN && assignedType != ASTNode::Type::UNKNOWN && symbol->type != assignedType) {
-            std::cerr << "Compiler Error: Type mismatch in assignment for variable '" << identifier_token.value
-                      << "'. Expected " << (symbol->type == ASTNode::Type::INTEGER ? "INTEGER" :
-                                            (symbol->type == ASTNode::Type::FLOAT ? "FLOAT" :
-                                             (symbol->type == ASTNode::Type::STRING_LITERAL ? "STRING" : "BOOLEAN")))
-                      << ", got " << (assignedType == ASTNode::Type::INTEGER ? "INTEGER" :
-                                      (assignedType == ASTNode::Type::FLOAT ? "FLOAT" :
-                                       (assignedType == ASTNode::Type::STRING_LITERAL ? "STRING" : "BOOLEAN")))
-                      << " at L" << identifier_token.line << ":C" << identifier_token.column << std::endl;
-            bytecode.clear(); // Indicate compilation failure
+            semanticErrors.push_back("Semantic Error: Type mismatch in assignment for variable '" + identifier_token.value + "'. Expected " +
+                (symbol->type == ASTNode::Type::INTEGER ? "INTEGER" :
+                (symbol->type == ASTNode::Type::FLOAT ? "FLOAT" :
+                (symbol->type == ASTNode::Type::STRING_LITERAL ? "STRING" : "BOOLEAN"))) +
+                ", got " +
+                (assignedType == ASTNode::Type::INTEGER ? "INTEGER" :
+                (assignedType == ASTNode::Type::FLOAT ? "FLOAT" :
+                (assignedType == ASTNode::Type::STRING_LITERAL ? "STRING" : "BOOLEAN"))) +
+                " at L" + std::to_string(identifier_token.line) + ":C" + std::to_string(identifier_token.column));
             return;
         }
         // If symbol type was UNKNOWN (e.g., from declaration without initializer), set it now
@@ -179,8 +185,7 @@ void Compiler::compileNode(ASTNode* node) {
         if (op.type == TokenType::AND) {
             if (!((leftType == ASTNode::Type::BOOLEAN_LITERAL || leftType == ASTNode::Type::INTEGER) &&
                   (rightType == ASTNode::Type::BOOLEAN_LITERAL || rightType == ASTNode::Type::INTEGER))) {
-                std::cerr << "Compiler Error: Logical operator '&&' requires boolean or integer operands." << std::endl;
-                bytecode.clear();
+                semanticErrors.push_back("Semantic Error: Logical operator '&&' requires boolean or integer operands.");
                 return;
             }
             // Short-circuiting AND logic
@@ -213,8 +218,7 @@ void Compiler::compileNode(ASTNode* node) {
         } else if (op.type == TokenType::OR) {
             if (!((leftType == ASTNode::Type::BOOLEAN_LITERAL || leftType == ASTNode::Type::INTEGER) &&
                   (rightType == ASTNode::Type::BOOLEAN_LITERAL || rightType == ASTNode::Type::INTEGER))) {
-                std::cerr << "Compiler Error: Logical operator '||' requires boolean or integer operands." << std::endl;
-                bytecode.clear();
+                semanticErrors.push_back("Semantic Error: Logical operator '||' requires boolean or integer operands.");
                 return;
             }
             // Short-circuiting OR logic
@@ -264,16 +268,14 @@ void Compiler::compileNode(ASTNode* node) {
                 if (bytecode.empty()) return;
                 bytecode.push_back(Bytecode(Instruction::ADD));
             } else {
-                std::cerr << "Compiler Error: Operator '+' requires two numeric operands or two string operands for concatenation." << std::endl;
-                bytecode.clear();
+                semanticErrors.push_back("Semantic Error: Operator '+' requires two numeric operands or two string operands for concatenation.");
                 return;
             }
         } else if (op.type == TokenType::MINUS || op.type == TokenType::STAR || op.type == TokenType::SLASH) {
             // Handle numeric arithmetic operators
             if (!((leftType == ASTNode::Type::INTEGER || leftType == ASTNode::Type::FLOAT) &&
                   (rightType == ASTNode::Type::INTEGER || rightType == ASTNode::Type::FLOAT))) {
-                std::cerr << "Compiler Error: Arithmetic operator '" << op.value << "' requires numeric operands." << std::endl;
-                bytecode.clear();
+                semanticErrors.push_back("Semantic Error: Arithmetic operator '" + op.value + "' requires numeric operands.");
                 return;
             }
             compileNode(left);
@@ -294,8 +296,7 @@ void Compiler::compileNode(ASTNode* node) {
             // Handle comparison operators
             if (!((leftType == ASTNode::Type::INTEGER || leftType == ASTNode::Type::FLOAT) &&
                   (rightType == ASTNode::Type::INTEGER || rightType == ASTNode::Type::FLOAT))) {
-                std::cerr << "Compiler Error: Comparison operator '" << op.value << "' requires numeric operands." << std::endl;
-                bytecode.clear();
+                semanticErrors.push_back("Semantic Error: Comparison operator '" + op.value + "' requires numeric operands.");
                 return;
             }
             compileNode(left);
@@ -317,8 +318,7 @@ void Compiler::compileNode(ASTNode* node) {
                 bytecode.push_back(Bytecode(Instruction::BANG_EQUAL));
             }
         } else {
-            std::cerr << "Compiler Error: Unknown binary operator '" << op.value << "'." << std::endl;
-            bytecode.clear();
+            semanticErrors.push_back("Semantic Error: Unknown binary operator '" + op.value + "'.");
             return;
         }
     }
@@ -333,8 +333,7 @@ void Compiler::compileNode(ASTNode* node) {
         } else if (op.type == TokenType::MINUS) {
             bytecode.push_back(Bytecode(Instruction::NEGATE)); // Emit NEGATE instruction
         } else {
-            std::cerr << "Compiler Error: Unknown unary operator." << std::endl;
-            bytecode.clear(); // Indicate compilation failure
+            semanticErrors.push_back("Semantic Error: Unknown unary operator.");
             return;
         }
     }
@@ -353,9 +352,7 @@ void Compiler::compileNode(ASTNode* node) {
                 if (initSymbol) {
                     varType = initSymbol->type;
                 } else {
-                    std::cerr << "Compiler Error: Initializer for variable '" << identifier_token.value
-                              << "' is an undeclared variable at L" << identifier_token.line << ":C" << identifier_token.column << std::endl;
-                    bytecode.clear(); // Indicate compilation failure
+                    semanticErrors.push_back("Semantic Error: Initializer for variable '" + identifier_token.value + "' is an undeclared variable at L" + std::to_string(identifier_token.line) + ":C" + std::to_string(identifier_token.column));
                     return;
                 }
             }
@@ -367,10 +364,9 @@ void Compiler::compileNode(ASTNode* node) {
         // Add the symbol to the symbol table
         if (!symbolTable.addSymbol(identifier_token.value, varType)) {
             // Error already reported by addSymbol if symbol exists
-            bytecode.clear(); // Indicate compilation failure
+            semanticErrors.push_back("Semantic Error: Duplicate variable '" + identifier_token.value + "' at L" + std::to_string(identifier_token.line) + ":C" + std::to_string(identifier_token.column));
             return;
         }
-
         // If there's an initializer, compile it and store the result
         if (initializer) {
             compileNode(initializer);
@@ -379,8 +375,7 @@ void Compiler::compileNode(ASTNode* node) {
             // Get the address of the newly added symbol
             Symbol* symbol = symbolTable.lookupSymbol(identifier_token.value);
             if (!symbol) { // Should not happen if addSymbol was successful
-                std::cerr << "Internal Compiler Error: Symbol not found after adding it." << std::endl;
-                bytecode.clear();
+                semanticErrors.push_back("Internal Compiler Error: Symbol not found after adding it.");
                 return;
             }
             bytecode.push_back(Bytecode(Instruction::PUSH_INT, symbol->address));
@@ -437,17 +432,18 @@ void Compiler::compileNode(ASTNode* node) {
         compileNode(expr);
         if (bytecode.empty()) return; // Propagate error
 
-        // Determine if we are printing a string or a value
+        // Determine if we are printing a string, a boolean, or a value
         ASTNode::Type exprType = resolveExpressionType(expr);
         if (exprType == ASTNode::Type::STRING_LITERAL) {
             bytecode.push_back(Bytecode(Instruction::PRINT_STRING));
+        } else if (exprType == ASTNode::Type::BOOLEAN_LITERAL) {
+            bytecode.push_back(Bytecode(Instruction::PRINT_BOOL));
         } else {
             bytecode.push_back(Bytecode(Instruction::PRINT_VALUE));
         }
     }
     else {
-        std::cerr << "Compiler Error: Unknown AST node type encountered." << std::endl;
-        bytecode.clear(); // Indicate compilation failure
+        semanticErrors.push_back("Semantic Error: Unknown AST node type encountered.");
         return;
     }
 }
@@ -483,9 +479,7 @@ ASTNode::Type Compiler::resolveExpressionType(Expression* expr) {
             // If symbol not found, it's an undeclared variable.
             // This error should ideally be caught earlier or handled more gracefully.
             // For now, return UNKNOWN and let subsequent checks handle it.
-            std::cerr << "Compiler Warning: Attempted to resolve type of undeclared variable '"
-                      << identifier_token.value << "' at L" << identifier_token.line
-                      << ":C" << identifier_token.column << std::endl;
+            semanticErrors.push_back("Semantic Warning: Attempted to resolve type of undeclared variable '" + identifier_token.value + "' at L" + std::to_string(identifier_token.line) + ":C" + std::to_string(identifier_token.column));
             return ASTNode::Type::UNKNOWN;
         }
     } else if (BinaryExpression* binExpr = dynamic_cast<BinaryExpression*>(expr)) {
@@ -525,4 +519,12 @@ ASTNode::Type Compiler::resolveExpressionType(Expression* expr) {
  */
 const std::vector<std::string>& Compiler::getStringLiterals() const {
     return string_literals;
+}
+
+const std::vector<std::string>& Compiler::getSemanticErrors() const {
+    return semanticErrors;
+}
+
+void Compiler::clearSemanticErrors() {
+    semanticErrors.clear();
 }

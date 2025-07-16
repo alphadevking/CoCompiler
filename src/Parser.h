@@ -15,6 +15,8 @@ private:
     bool match(TokenType type);
     Token consume(TokenType type, const std::string& message);
 
+    void synchronize(); // Error recovery: skip to next statement boundary
+
     // Parsing functions for expressions
     Expression* primary();
     Expression* unary(); // New: For future unary operators like -x
