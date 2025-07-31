@@ -1,10 +1,12 @@
-// This is a single-line comment
-var x = 10; // Declare and initialize x
-var y = 5;  // Declare and initialize y
+// This is a test file for the CoCompiler.
+// It includes various language features to test different compiler phases.
+
+var x = 10;
+var y = 5;
 
 print("--- Test 1: If-else statement ---");
 if (x > y) {
-    print("x is greater than y"); // Expected: x is greater than y
+    print("x is greater than y");
 } else if (x == y) {
     print("x is equal to y");
 } else {
@@ -14,47 +16,50 @@ if (x > y) {
 print("--- Test 2: Arithmetic Operations ---");
 var a = 20;
 var b = 4;
-print(a + b); // Expected: 24
-print(a - b); // Expected: 16
-print(a * b); // Expected: 80
-print(a / b); // Expected: 5
+print(a + b);
+print(a - b);
+print(a * b);
+print(a / b);
 
 print("--- Test 3: Logical Operations ---");
 var p = true;
 var q = false;
-print(p && q); // Expected: false
-print(p || q); // Expected: true
-print(!p);     // Expected: false
-print(!q);     // Expected: true
+print(p && q);
+print(p || q);
+print(!p);
+print(!q);
 
 print("--- Test 4: String Concatenation ---");
 var str1 = "Hello, ";
 var str2 = "World!";
-print(str1 + str2); // Expected: Hello, World!
+print(str1 + str2);
 
 print("--- Test 5: Chained Comparisons ---");
 var num1 = 10;
 var num2 = 10;
 var num3 = 5;
 if (num1 >= num2) {
-    print("num1 is greater than or equal to num2"); // Expected: num1 is greater than or equal to num2
+    print("num1 is greater than or equal to num2");
 }
 if (num1 != num3) {
-    print("num1 is not equal to num3"); // Expected: num1 is not equal to num3
+    print("num1 is not equal to num3");
 }
 if (num3 <= num1) {
-    print("num3 is less than or equal to num1"); // Expected: num3 is less than or equal to num1
+    print("num3 is less than or equal to num1");
 }
 
 print("--- Test 6: Assignment as Expression ---");
 var x_assign = 5;
 var y_assign = 7;
-print(x_assign = y_assign); // Expected: 7 (value of y_assign after assignment)
+print(x_assign = y_assign);
 
 print("--- Test 7: Complex Assignment Expression ---");
 var x_complex = 2;
 var y_complex = 1;
 x_complex = y_complex + x_complex * 2;
-print(x_complex); // Expected: x_complex will be 5 (1 + 2 * 2)
-// All features above are supported by the current compiler pipeline.
-// If any test fails, it may be due to a missing feature in the TAC/SSA implementation, not the test itself.
+print(x_complex);
+
+// --- Test 8: Constant Folding Demonstration ---
+print("--- Test 8: Constant Folding ---");
+print(10 + 5 * 2); // This should be constant-folded to print(20)
+print( (100 / 5) - 10 ); // This should be constant-folded to print(10)

@@ -224,6 +224,7 @@ double VM::run(const std::vector<Bytecode>& bytecode, const std::vector<std::str
             case Instruction::PRINT_VALUE: { // New PRINT_VALUE instruction (25)
                 if (stack.empty()) { std::cerr << "VM Error: Stack underflow for PRINT_VALUE." << std::endl; return -1; }
                 double val = stack.back(); stack.pop_back();
+                std::cout << " "; // Change prefix to a single space
                 // Print as integer if it's an integer, otherwise as double
                 if (std::floor(val) == val) {
                     std::cout << static_cast<int>(val) << std::endl;
@@ -235,6 +236,7 @@ double VM::run(const std::vector<Bytecode>& bytecode, const std::vector<std::str
             case Instruction::PRINT_BOOL: { // New PRINT_BOOL instruction
                 if (stack.empty()) { std::cerr << "VM Error: Stack underflow for PRINT_BOOL." << std::endl; return -1; }
                 double val = stack.back(); stack.pop_back();
+                std::cout << " "; // Change prefix to a single space
                 if (val == 0.0) {
                     std::cout << "false" << std::endl;
                 } else {
@@ -249,6 +251,7 @@ double VM::run(const std::vector<Bytecode>& bytecode, const std::vector<std::str
                     std::cerr << "VM Error: Invalid string literal index for PRINT_STRING." << std::endl;
                     return -1;
                 }
+                std::cout << " "; // Change prefix to a single space
                 std::cout << this->string_literals[string_idx] << std::endl;
                 break;
             }

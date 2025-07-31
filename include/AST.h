@@ -18,7 +18,8 @@ public:
         PRINT_STATEMENT,       // New: For print statements
         STRING_LITERAL,        // New: For string literals
         BOOLEAN_LITERAL,       // New: For boolean literals (true/false)
-        UNARY_EXPRESSION       // New: For unary expressions like !true, -5
+        UNARY_EXPRESSION,      // New: For unary expressions like !true, -5
+        BINARY_EXPRESSION      // New: For binary expressions like a + b
     };
 
     virtual ~ASTNode() = default;

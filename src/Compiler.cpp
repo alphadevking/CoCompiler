@@ -491,23 +491,32 @@ ASTNode::Type Compiler::resolveExpressionType(Expression* expr) {
         if (opType == TokenType::PLUS && leftType == ASTNode::Type::STRING_LITERAL && rightType == ASTNode::Type::STRING_LITERAL) {
             return ASTNode::Type::STRING_LITERAL;
         }
-        // For other binary operations, if operands are numeric, result is numeric (e.g., INTEGER or FLOAT)
-        // For logical operations, result is boolean (INTEGER 0 or 1)
-        // This simplified logic assumes type compatibility is already checked during compilation of the binary expression itself.
-        // For now, we'll return the type of the left operand if it's numeric/boolean, or UNKNOWN if not.
-        // A more robust solution would involve a type inference system.
-        if ((leftType == ASTNode::Type::INTEGER || leftType == ASTNode::Type::FLOAT || leftType == ASTNode::Type::BOOLEAN_LITERAL) &&
-            (rightType == ASTNode::Type::INTEGER || rightType == ASTNode::Type::FLOAT || rightType == ASTNode::Type::BOOLEAN_LITERAL)) {
-            // If either is float, result is float, otherwise int/bool
+        // For comparison and logical operators, the result is always a boolean.
+        if (opType == TokenType::GREATER || opType == TokenType::LESS ||
+            opType == TokenType::GREATER_EQUAL || opType == TokenType::LESS_EQUAL ||
+            opType == TokenType::EQUAL_EQUAL || opType == TokenType::BANG_EQUAL ||
+            opType == TokenType::AND || opType == TokenType::OR) {
+            return ASTNode::Type::BOOLEAN_LITERAL;
+        }
+
+        // For arithmetic operators, determine the resulting numeric type.
+        if ((leftType == ASTNode::Type::INTEGER || leftType == ASTNode::Type::FLOAT) &&
+            (rightType == ASTNode::Type::INTEGER || rightType == ASTNode::Type::FLOAT)) {
             if (leftType == ASTNode::Type::FLOAT || rightType == ASTNode::Type::FLOAT) {
                 return ASTNode::Type::FLOAT;
             } else {
-                return ASTNode::Type::INTEGER; // Covers INTEGER and BOOLEAN_LITERAL (which are 0/1 integers)
+                return ASTNode::Type::INTEGER;
             }
         }
-        return ASTNode::Type::UNKNOWN; // Fallback for unhandled binary expression types
-    }
-    else {
+        return ASTNode::Type::UNKNOWN; // Fallback for unhandled binary expression types or type mismatches
+    } else if (UnaryExpression* unaryExpr = dynamic_cast<UnaryExpression*>(expr)) {
+        // For unary NOT operator, the result is a boolean.
+        if (unaryExpr->getOp().type == TokenType::BANG) {
+            return ASTNode::Type::BOOLEAN_LITERAL;
+        }
+        // For unary MINUS, the result is numeric.
+        return resolveExpressionType(unaryExpr->getRight());
+    } else {
         // For other expression types, just return their inherent type
         return expr->getType();
     }
