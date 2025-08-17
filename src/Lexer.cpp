@@ -1,4 +1,4 @@
-#include "Lexer.h"
+#include "../include/Lexer.h"
 #include <cctype> // For isdigit, isalpha, isalnum
 #include <iostream> // For error output
 

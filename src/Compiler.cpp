@@ -1,4 +1,4 @@
-#include "Compiler.h"
+#include "../include/Compiler.h"
 #include <iostream>
 #include "../include/Tokens.h"
 #include "../include/Bytecode.h"

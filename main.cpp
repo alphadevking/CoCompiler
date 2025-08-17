@@ -8,11 +8,11 @@
 #include <regex>
 #include <sstream> // Added for istringstream and getline
 #include "Tokens.h"
-#include "src/Lexer.h"
-#include "src/Parser.h"
+#include "include/Lexer.h"
+#include "include/Parser.h"
 #include "include/AST.h"
-#include "src/Compiler.h"
-#include "src/VM.h"
+#include "include/Compiler.h"
+#include "include/VM.h"
 #include <unordered_set>
 #include <typeinfo> // Added for typeid
 
