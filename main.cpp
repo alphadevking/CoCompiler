@@ -494,21 +494,51 @@ ASTNode* constant_fold(ASTNode* ast) {
         auto* left_lit = dynamic_cast<Literal*>(left);
         auto* right_lit = dynamic_cast<Literal*>(right);
         if (left_lit && right_lit) {
-            int l = std::stoi(left_lit->getToken().value);
-            int r = std::stoi(right_lit->getToken().value);
-            int result_val = 0;
-            if (bin->getOp().type == TokenType::PLUS) result_val = l + r;
-            else if (bin->getOp().type == TokenType::MINUS) result_val = l - r;
-            else if (bin->getOp().type == TokenType::STAR) result_val = l * r;
-            else if (bin->getOp().type == TokenType::SLASH && r != 0) result_val = l / r;
+            // Determine if either operand is a float
+            bool is_float_op = (left_lit->getToken().type == TokenType::FLOAT_LITERAL ||
+                                right_lit->getToken().type == TokenType::FLOAT_LITERAL);
+
+            double l_val = (left_lit->getToken().type == TokenType::FLOAT_LITERAL) ?
+                           std::stod(left_lit->getToken().value) : std::stoi(left_lit->getToken().value);
+            double r_val = (right_lit->getToken().type == TokenType::FLOAT_LITERAL) ?
+                           std::stod(right_lit->getToken().value) : std::stoi(right_lit->getToken().value);
+
+            double result_val = 0.0;
+            bool handled = true;
+
+            if (bin->getOp().type == TokenType::PLUS) result_val = l_val + r_val;
+            else if (bin->getOp().type == TokenType::MINUS) result_val = l_val - r_val;
+            else if (bin->getOp().type == TokenType::STAR) result_val = l_val * r_val;
+            else if (bin->getOp().type == TokenType::SLASH) {
+                if (r_val == 0.0) {
+                    std::cerr << "Semantic Error: Division by zero during constant folding." << std::endl;
+                    // Return original AST to allow semantic analysis to catch it or propagate error
+                    delete left; delete right;
+                    return deep_copy_ast(bin);
+                }
+                result_val = l_val / r_val;
+            }
             else {
+                handled = false;
+            }
+
+            if (handled) {
                 delete left; delete right;
-                result = deep_copy_ast(bin); // Don't fold if not supported
+                if (is_float_op) {
+                    result = new Literal(Token(TokenType::FLOAT_LITERAL, std::to_string(result_val), 0, 0));
+                } else {
+                    // If both were integers, and result is whole number, keep it as INT_LITERAL
+                    if (std::floor(result_val) == result_val) {
+                        result = new Literal(Token(TokenType::INT_LITERAL, std::to_string(static_cast<long long>(result_val)), 0, 0));
+                    } else {
+                        // This case should ideally not happen if both were integers, but as a fallback
+                        result = new Literal(Token(TokenType::FLOAT_LITERAL, std::to_string(result_val), 0, 0));
+                    }
+                }
                 return result;
             }
-            delete left; delete right;
-            result = new Literal(Token(TokenType::INT_LITERAL, std::to_string(result_val), 0, 0));
-            return result;
+            // If not handled by constant folding, create a new binary expression
+            result = new BinaryExpression(dynamic_cast<Expression*>(left), bin->getOp(), dynamic_cast<Expression*>(right));
         }
         result = new BinaryExpression(dynamic_cast<Expression*>(left), bin->getOp(), dynamic_cast<Expression*>(right));
     } else if (auto* unary = dynamic_cast<UnaryExpression*>(ast)) {
